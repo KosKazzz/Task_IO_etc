@@ -6,9 +6,9 @@ public class Main {
         String[] products = {"Хлеб", "Молоко", "Мясо", "Картофель", "Конфета"};
         int[] prices = {56, 79, 550, 65, 200};
         Basket bs;
-        File basketIsHere = new File(".\\basket.txt");
-        if (basketIsHere.canRead()) {
-            bs = Basket.loadFromTxtFile(".\\basket.txt");
+        File basketBinIsHere = new File(".\\basket.bin");
+        if (basketBinIsHere.canRead()) {
+            bs = Basket.loadFromBinFile(".\\basket.bin");
             System.out.println("Ваша корзина : ");
             bs.printCart();
             System.out.println();

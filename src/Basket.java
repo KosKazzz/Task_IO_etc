@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Basket /*implements Serializable*/ {
+public class Basket implements Serializable {
 
     private int[] prices;
     private String[] products;
@@ -25,7 +25,8 @@ public class Basket /*implements Serializable*/ {
 
     public void addToCart(int productNum, int amount) {
         this.countOfProducts[productNum - 1] += amount;
-        this.saveTxt("basket.txt");
+        //this.saveTxt("basket.txt");
+        this.saveBin(".\\basket.bin");
     }
 
     public void printCart() {
@@ -101,6 +102,28 @@ public class Basket /*implements Serializable*/ {
         System.out.println(" Тут  countOfProducts - " + Arrays.toString(countOfProductsFromFile));
         basket.printCart();*/
         return basket;
+    }
+
+    public void saveBin(String filePathAndName) {
+        try (FileOutputStream fos = new FileOutputStream(filePathAndName);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(this);
+        } catch (IOException ex) {
+            ex.getStackTrace();
+        }
+    }
+
+    public static Basket loadFromBinFile(String filePathAndName) {
+        Basket bs = null;
+        try (FileInputStream fis = new FileInputStream(filePathAndName);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            bs = (Basket) ois.readObject();
+        } catch (IOException ex) {
+            System.err.println("File not found!");
+        } catch (ClassNotFoundException ex) {
+            System.err.println("Class not found!!!");
+        }
+        return bs;
     }
 }
 
