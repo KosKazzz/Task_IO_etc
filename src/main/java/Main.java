@@ -6,9 +6,10 @@ public class Main {
         String[] products = {"Хлеб", "Молоко", "Мясо", "Картофель", "Конфета"};
         int[] prices = {56, 79, 550, 65, 200};
         Basket bs;
-        File basketIsHere = new File(".\\basket.txt");
+        File basketIsHere = new File(".\\src\\main\\resources\\basket.txt");
         if (basketIsHere.canRead()) {
-            bs = Basket.loadFromTxtFile(".\\basket.txt");
+            //bs = Basket.loadFromTxtFile(".\\src\\main\\resources\\basket.txt");
+            bs = Basket.loadFromJson();
             System.out.println("Ваша корзина : ");
             bs.printCart();
             System.out.println();
@@ -68,6 +69,8 @@ public class Main {
                     }
                     if (countOfProd == 0) {
                         bs.getCountOfProducts()[nomOfProd - 1] = 0;
+                        bs.logging(nomOfProd,countOfProd);
+                        bs.addToCart(nomOfProd,countOfProd);
                     } else {
                         if (bs.getCountOfProducts()[nomOfProd - 1] + countOfProd < 0) {
                             System.out.println("В корзине не может быть отрицательное количество!!!");
@@ -81,5 +84,6 @@ public class Main {
             }
         }
         bs.printCart();
+        bs.saveLog();
     }
 }

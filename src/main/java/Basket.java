@@ -1,18 +1,25 @@
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-public class Basket /*implements Serializable*/ {
+import java.io.*;
+import java.util.Arrays;
+import java.util.Collections;
+
+
+public class Basket {
 
     private int[] prices;
     private String[] products;
     private int[] countOfProducts;
+    private ClientLog clientLog;
 
     public Basket(int[] prices, String[] products) {
         this.prices = prices;
         this.products = products;
         this.countOfProducts = new int[products.length];
+        this.clientLog = new ClientLog();
     }
 
     public int[] getCountOfProducts() {
@@ -25,7 +32,18 @@ public class Basket /*implements Serializable*/ {
 
     public void addToCart(int productNum, int amount) {
         this.countOfProducts[productNum - 1] += amount;
-        this.saveTxt("basket.txt");
+        //this.saveTxt(".\\src\\main\\resources\\basket.txt");
+        this.saveJson();
+        this.logging(productNum, amount);
+    }
+
+    public void saveLog() {
+        File logFile = new File(".\\src\\main\\resources\\log.csv");
+        this.clientLog.exportAsCSV(logFile);
+    }
+
+    public void logging(int productNum, int amount) {
+        this.clientLog.log(productNum, amount);
     }
 
     public void printCart() {
@@ -95,11 +113,62 @@ public class Basket /*implements Serializable*/ {
         }
         Basket basket = new Basket(pricesFromFile, productsFromFile);
         basket.setCountOfProducts(countOfProductsFromFile);
-        //test
-        /*System.out.println(" Тут  prices - " + Arrays.toString(pricesFromFile));
-        System.out.println(" Тут  products - " + Arrays.toString(productsFromFile));
-        System.out.println(" Тут  countOfProducts - " + Arrays.toString(countOfProductsFromFile));
-        basket.printCart();*/
+        return basket;
+    }
+
+    void saveJson() {
+        JSONObject jsnObj = new JSONObject();
+        JSONArray jsnPrices = new JSONArray();
+        JSONArray jsnProducts = new JSONArray();
+        JSONArray jsnCountOfProducts = new JSONArray();
+        for (int pr : prices) {
+            jsnPrices.add(pr);
+        }
+        jsnProducts.addAll(Arrays.asList(products));
+        for (int cnt : countOfProducts) {
+            jsnCountOfProducts.add(cnt);
+        }
+        jsnObj.put("prices", jsnPrices);
+        jsnObj.put("products", jsnProducts);
+        jsnObj.put("countOfProducts", jsnCountOfProducts);
+        try (FileWriter fileWriter = new FileWriter(".\\src\\main\\resources\\jsonBasket.json")) {
+            fileWriter.write(jsnObj.toJSONString());
+            fileWriter.flush();
+        } catch (IOException ex) {
+            System.err.println("Json файл не записывается...");
+            ex.printStackTrace();
+        }
+    }
+
+    public static Basket loadFromJson() {
+        JSONParser parser = new JSONParser();
+        Basket basket = null;
+        try (FileReader reader = new FileReader(".\\src\\main\\resources\\jsonBasket.json")) {
+            Object obj = parser.parse(reader);
+            JSONObject jsnObj = (JSONObject) obj;
+            JSONArray pricesJson = (JSONArray) jsnObj.get("prices");
+            JSONArray productsJson = (JSONArray) jsnObj.get("products");
+            JSONArray countOfProductsJson = (JSONArray) jsnObj.get("countOfProducts");
+            long[] pricesLongFromJson = new long[pricesJson.size()];
+            String[] productsStringFromJson = new String[pricesJson.size()];
+            long[] countOfProductsLongFromJson = new long[pricesJson.size()];
+            for (int i = 0; i < productsJson.size(); i++) {
+                pricesLongFromJson[i] = (Long) pricesJson.get(i);
+                productsStringFromJson[i] = (String) productsJson.get(i);
+                countOfProductsLongFromJson[i] = (Long) countOfProductsJson.get(i);
+            }
+            int[] pricesIntFromJson = new int[pricesJson.size()];
+            int[] countOfProductsFromJson = new int[pricesJson.size()];
+            for (int i = 0; i < productsJson.size(); i++) {
+                pricesIntFromJson[i] = (int) pricesLongFromJson[i];
+                countOfProductsFromJson[i] = (int) countOfProductsLongFromJson[i];
+            }
+            basket = new Basket(pricesIntFromJson, productsStringFromJson);
+            basket.setCountOfProducts(countOfProductsFromJson);
+        } catch (IOException | ParseException ex) {
+            System.err.println("Can't read json file!!!");
+            ex.printStackTrace();
+        }
         return basket;
     }
 }
