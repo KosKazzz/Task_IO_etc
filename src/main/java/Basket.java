@@ -5,7 +5,6 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.Arrays;
-import java.util.Collections;
 
 
 public class Basket {
@@ -32,13 +31,10 @@ public class Basket {
 
     public void addToCart(int productNum, int amount) {
         this.countOfProducts[productNum - 1] += amount;
-        //this.saveTxt(".\\src\\main\\resources\\basket.txt");
-        this.saveJson();
         this.logging(productNum, amount);
     }
 
-    public void saveLog() {
-        File logFile = new File(".\\src\\main\\resources\\log.csv");
+    void saveLog(File logFile) {
         this.clientLog.exportAsCSV(logFile);
     }
 
@@ -62,10 +58,8 @@ public class Basket {
         System.out.println("  Итого: " + sum + " руб.");
     }
 
-    void saveTxt(String filePathAndName) {
-        filePathAndName = ".\\" + filePathAndName;
-        File fileBasket = new File(filePathAndName);
-        try (FileWriter writer = new FileWriter(fileBasket, false)) {
+    public void saveTxt(File fileName) {
+        try (FileWriter writer = new FileWriter(fileName, false)) {
             for (int pr : prices) {
                 writer.write(Integer.toString(pr));
                 writer.append(' ');
@@ -86,11 +80,9 @@ public class Basket {
         }
     }
 
-    public static Basket loadFromTxtFile(String fileName) {
-        //fileName = ".\\" + fileName + ".txt";
-        File fileBasket = new File(fileName);
+    public static Basket loadFromTxtFile(File fileName) {
         StringBuilder stringFromTxtBasket = new StringBuilder();
-        try (FileReader reader = new FileReader(fileBasket)) {
+        try (FileReader reader = new FileReader(fileName)) {
             int c;
             while ((c = reader.read()) != -1) {
                 stringFromTxtBasket.append((char) c);
@@ -116,7 +108,7 @@ public class Basket {
         return basket;
     }
 
-    void saveJson() {
+    void saveJson(File fileName) {
         JSONObject jsnObj = new JSONObject();
         JSONArray jsnPrices = new JSONArray();
         JSONArray jsnProducts = new JSONArray();
@@ -131,7 +123,7 @@ public class Basket {
         jsnObj.put("prices", jsnPrices);
         jsnObj.put("products", jsnProducts);
         jsnObj.put("countOfProducts", jsnCountOfProducts);
-        try (FileWriter fileWriter = new FileWriter(".\\src\\main\\resources\\jsonBasket.json")) {
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
             fileWriter.write(jsnObj.toJSONString());
             fileWriter.flush();
         } catch (IOException ex) {
@@ -140,10 +132,10 @@ public class Basket {
         }
     }
 
-    public static Basket loadFromJson() {
+    public static Basket loadFromJson(File fileName) {
         JSONParser parser = new JSONParser();
         Basket basket = null;
-        try (FileReader reader = new FileReader(".\\src\\main\\resources\\jsonBasket.json")) {
+        try (FileReader reader = new FileReader(fileName)) {
             Object obj = parser.parse(reader);
             JSONObject jsnObj = (JSONObject) obj;
             JSONArray pricesJson = (JSONArray) jsnObj.get("prices");
@@ -170,6 +162,32 @@ public class Basket {
             ex.printStackTrace();
         }
         return basket;
+    }
+
+    public static Basket BasketIsEmpty(int[] pri, String[] prod) {
+        System.out.println("Ваша корзина пуста!");
+        return new Basket(pri, prod);
+    }
+
+    public void saveBasket(boolean enabled, File fileName, String format) {
+        if (enabled) {
+            if (format.equals("json")) {
+                saveJson(fileName);
+            } else if (format.equals("txt")) {
+                saveTxt(fileName);
+            } else {
+                System.out.println("Не корректный формат файла для записи!");
+            }
+        } else {
+            System.out.println("Ваша корзина не сохранена!");
+        }
+    }
+
+    public void logBasket(boolean enabled, File fileName) {
+        if (enabled) {
+            this.saveLog(fileName);
+        }
+
     }
 }
 

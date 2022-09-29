@@ -5,19 +5,28 @@ public class Main {
     public static void main(String[] args) {
         String[] products = {"Хлеб", "Молоко", "Мясо", "Картофель", "Конфета"};
         int[] prices = {56, 79, 550, 65, 200};
-        Basket bs;
-        File basketIsHere = new File(".\\src\\main\\resources\\basket.txt");
-        if (basketIsHere.canRead()) {
-            //bs = Basket.loadFromTxtFile(".\\src\\main\\resources\\basket.txt");
-            bs = Basket.loadFromJson();
-            System.out.println("Ваша корзина : ");
-            bs.printCart();
-            System.out.println();
+        Basket bs = null;//заглушка
+        Loadconf loadconf = new Loadconf(".\\shop.xml");
+        //File basketTxtIsHere = new File(".\\src\\main\\resources\\basket.txt");
+        File basketHere = new File(".\\src\\main\\resources\\" + loadconf.getLoadFileName());
+        File lodFile = new File(".\\src\\main\\resources\\" + loadconf.getLogFileName());
+        File saveFile = new File(".\\src\\main\\resources\\" + loadconf.getSaveFileName());
+        if (loadconf.isLoadEnabled() && basketHere.canRead()) {
+            if (loadconf.getLoadFormat().equals("json")) {
+                bs = Basket.loadFromJson(basketHere);
+                System.out.println("Ваша корзина : ");
+                bs.printCart();
+                System.out.println();
+            } else if (loadconf.getLoadFormat().equals("txt")) {
+                bs = Basket.loadFromTxtFile(basketHere);
+                System.out.println("Ваша корзина : ");
+                bs.printCart();
+                System.out.println();
+            }
         } else {
-            System.out.println("Ваша корзина пуста!");
-            bs = new Basket(prices, products);
-            System.out.println();
+            bs = Basket.BasketIsEmpty(prices, products);
         }
+        System.out.println();
         for (int i = 0; i < products.length; i++) {
             System.out.println((i + 1) + ". " + products[i] + " - " + prices[i] + " руб/шт.");
         }
@@ -69,13 +78,13 @@ public class Main {
                     }
                     if (countOfProd == 0) {
                         bs.getCountOfProducts()[nomOfProd - 1] = 0;
-                        bs.logging(nomOfProd,countOfProd);
-                        bs.addToCart(nomOfProd,countOfProd);
+                        bs.saveBasket(loadconf.isSaveEnabled(), saveFile, loadconf.getSaveFormat());
                     } else {
                         if (bs.getCountOfProducts()[nomOfProd - 1] + countOfProd < 0) {
                             System.out.println("В корзине не может быть отрицательное количество!!!");
                         } else {
                             bs.addToCart(nomOfProd, countOfProd);
+                            bs.saveBasket(loadconf.isSaveEnabled(), saveFile, loadconf.getSaveFormat());
                         }
                     }
                 }
@@ -84,6 +93,6 @@ public class Main {
             }
         }
         bs.printCart();
-        bs.saveLog();
+        bs.logBasket(loadconf.isLogEnabled(), lodFile);
     }
 }
